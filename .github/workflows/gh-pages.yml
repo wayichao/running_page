@@ -70,6 +70,10 @@ jobs:
             ${{ inputs.data_cache_prefix }}-${{ github.sha }}-
             ${{ inputs.data_cache_prefix }}-
 
+      - name: Debug Build Output
+        run: |
+          cat src/static/activities.json
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
