@@ -73,6 +73,10 @@ jobs:
       - name: Debug Build Output
         run: |
           cat src/static/activities.json
+          echo "SHA: ${{ github.sha }}"
+          echo "Cache key used: ${{ inputs.data_cache_prefix }}-${{ github.sha }}-${{ github.run_id }}"
+          git status
+          echo "Cache hit: ${{ steps.cache-step.outputs.cache-hit }}"
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
