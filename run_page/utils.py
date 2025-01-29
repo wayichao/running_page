@@ -55,10 +55,47 @@ def make_activities_file(
     generator.sync_from_data_dir(
         data_dir, file_suffix=file_suffix, activity_title_dict=activity_title_dict
     )
+    with open(json_file, 'r') as f:
+        existing_activities = json.load(f)
     activities_list = generator.load()
-    with open(json_file, "w") as f:
-        json.dump(activities_list, f)
+    # existing_activities.extend(activities_list)
+    existing_activities = merge_activities(existing_activities, activities_list)
 
+    # 写回文件
+    with open(json_file, 'w') as f:
+      json.dump(existing_activities, f)
+
+
+def merge_activities(existing_activities, new_activities):
+    # 转换日期字符串为日期对象的辅助函数
+    def get_date(activity):
+      return datetime.strptime(activity['start_date'].split()[0], '%Y-%m-%d')
+
+    # 创建现有活动的日期映射
+    existing_dates = {get_date(act): i for i, act in enumerate(existing_activities)}
+
+    # 将新活动按日期分类
+    new_dates = {get_date(act): act for act in new_activities}
+
+    # 找出需要删除的索引
+    indices_to_remove = set()
+    for date in new_dates:
+      if date in existing_dates:
+        indices_to_remove.add(existing_dates[date])
+
+    print(f"new_activities len: {len(new_activities)}")
+    print(f"Need to remove {len(indices_to_remove)} activities")
+
+    # 保留不需要删除的现有活动
+    filtered_activities = [act for i, act in enumerate(existing_activities) if i not in indices_to_remove]
+
+    # 添加所有新活动
+    filtered_activities.extend(new_activities)
+
+    # 按日期排序
+    # filtered_activities.sort(key=lambda x: x['start_date'])
+
+    return filtered_activities
 
 def make_strava_client(client_id, client_secret, refresh_token):
     client = Client()
