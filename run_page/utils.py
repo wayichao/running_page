@@ -59,11 +59,11 @@ def make_activities_file(
         existing_activities = json.load(f)
     activities_list = generator.load()
     # existing_activities.extend(activities_list)
-    existing_activities = merge_activities(existing_activities, activities_list)
+    ret = merge_activities(existing_activities, activities_list)
 
     # 写回文件
     with open(json_file, 'w') as f:
-      json.dump(existing_activities, f)
+      json.dump(ret, f)
 
 
 def merge_activities(existing_activities, new_activities):
