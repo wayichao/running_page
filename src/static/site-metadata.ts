@@ -25,7 +25,7 @@ const data: ISiteMetadataResult = {
       url: `${getBasePath()}/summary`,
     },
     {
-      name: 'yihong\'s Blog',
+      name: "yihong's Blog",
       url: 'https://github.com/yihong0618/gitblog',
     },
     {
