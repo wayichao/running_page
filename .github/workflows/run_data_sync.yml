@@ -221,6 +221,11 @@ jobs:
         # python run_page/gen_svg.py --from-db --year $(date +"%Y")  --language zh_CN --title "$(date +"%Y") Running" --type github --github-style "align-monday" --athlete "${{ env.ATHLETE }}" --special-distance 10 --special-distance2 20 --special-color yellow --special-color2 red --output assets/github_$(date +"%Y").svg --use-localtime --min-distance 0.5
 
 
+      - name: Make year summary
+        if: env.GENERATE_MONTH_OF_LIFE == 'true'
+        run: |
+          python run_page/gen_svg.py --from-db --type year_summary --output assets/year_summary.svg --athlete "${{ env.ATHLETE }}"
+
       - name: Save data to parqent
         if: env.SAVE_TO_PARQENT == 'true'
         run: |

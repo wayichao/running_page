@@ -1,20 +1,15 @@
 import { useMemo } from 'react';
 import { locationForRun, titleForRun } from '@/utils/utils';
 import activities from '@/static/activities.json';
+import { COUNTRY_STANDARDIZATION } from '@/static/city';
 
-// standardize country names for consistency between mapbox and activities data
 const standardizeCountryName = (country: string): string => {
-  if (country.includes('美利坚合众国')) {
-    return '美国';
+  for (const [pattern, standardName] of COUNTRY_STANDARDIZATION) {
+    if (country.includes(pattern)) {
+      return standardName;
+    }
   }
-  if (country.includes('英国')) {
-    return '英国';
-  }
-  if (country.includes('印度尼西亚')) {
-    return '印度尼西亚';
-  } else {
-    return country;
-  }
+  return country;
 };
 
 const useActivities = () => {
