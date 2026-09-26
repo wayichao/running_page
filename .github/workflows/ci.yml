@@ -37,7 +37,8 @@ jobs:
 
       - name: Lint with Ruff
         run: |
-          pip install ruff
+          # ruff 0.16 changed default rules and flags 300+ issues in unchanged upstream code
+          pip install "ruff<0.16"
           ruff check .
 
   node_lint_and_test:
