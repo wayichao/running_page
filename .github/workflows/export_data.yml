@@ -1,0 +1,61 @@
+name: Export Data (encrypted)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore data cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            activities
+            assets
+            GPX_OUT
+            TCX_OUT
+            FIT_OUT
+            Workouts
+            run_page/data.db
+            src/static/activities.json
+            imported.json
+          key: track_data-${{ github.sha }}-
+          restore-keys: |
+            track_data-
+
+      - name: Encrypt with owner's public key
+        run: |
+          cat > pub.pem <<'PEM'
+          -----BEGIN PUBLIC KEY-----
+          MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAuq5jWDzxf5UplpJ+A1Cn
+          C/+4RqLDH7YzUPEn77BU0ZD5LlwJo5T+beYG5h4Yo9bUc8CIQ7JiYJWC3XrMcJxf
+          VEH66x9eB1oiuW1R/9YXnQYOLHtLIwlh10z5kaTQuugpC8tZqGZXLADUBYlUglrs
+          U46sDdmXxiBdJpz7jWRn1IJTE+s44wpKhvEjeyjhn8550TkqomTgHKdLSRPFsyBQ
+          Es4VHVhOSj6FVdObDvCEt14yX3zz87gY/NvI0sNl0YgRdxxnA+csgvnoITQA2MQq
+          it4XCpzrfNLHF/5yoJNnV07a3g0vfjGalhM6maimXprKIYMaQUnP3ZcFPGLUJbvl
+          AeME429iXAQ2blkk4frD5yqLTKjemzWBnpIxG7HIb4xCAdmJPmqyKHmO0kc9t5FK
+          7JKMERMDP42NpQZEzvK8K5V/rD9gDoW6QUrRsUlIBiqbH+4DMcbZzRY0VjV0aYEF
+          ekVuvD+uqR2f6VT+KRd22lNR5yqX7CASjf253Ao0/TSPqegOS1WhVly3qT98tluc
+          BMQpJr4cwAzFed7PmD3E2rXsvkyUiMmQYGE/LUx3qvjZhHZBxH6XZNUPK0BkdW7N
+          hjPy37QDevXjDSVdDAsxBNZ+XHFIogsHVGyEclZC3wLrC3yx9x/YOHPXHARiCQdm
+          6CGkmdAQgrAI0OCq9g3kH5UCAwEAAQ==
+          -----END PUBLIC KEY-----
+          PEM
+          for d in activities GPX_OUT TCX_OUT FIT_OUT Workouts; do
+            [ -d "$d" ] && echo "$d: $(find "$d" -type f | wc -l) files" || echo "$d: absent"
+          done
+          tar czf data.tgz --ignore-failed-read activities GPX_OUT TCX_OUT FIT_OUT Workouts run_page/data.db imported.json 2>/dev/null || true
+          openssl rand -out k.bin 32
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in data.tgz -out data.tgz.enc -pass file:k.bin
+          openssl pkeyutl -encrypt -pubin -inkey pub.pem -pkeyopt rsa_padding_mode:oaep -in k.bin -out k.bin.enc
+          mkdir out && mv data.tgz.enc k.bin.enc out/
+          rm -f k.bin data.tgz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: data-encrypted
+          path: out/
+          retention-days: 1
